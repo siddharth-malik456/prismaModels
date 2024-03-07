@@ -1,0 +1,147 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// -- -- MORE SKILLS TO BE ADDED (PORTFOLIO TABLE, PROJECT APPLICANTS TABLE, PROJECT SELECTION TABLE)-- -- 
+enum Skills {
+  graphicDesigner
+  frontEndDevloper
+  BackEndDevloper
+  LogoExpert
+}
+
+// -- -- MORE SKILLS TO BE ADDED (PROJECT TABLE)-- -- 
+enum Industry {
+  webDevlopment
+  appDevlopment
+  agriculture
+  design
+}
+
+// -- -- STATUS OF APPLICANTS(PROJECT APPLICANTS TABLE) -- -- 
+enum ApplicantStatus {
+  rejected
+  pending
+  accepted
+}
+
+// -- -- TYPE OF EMPLOYEE -- -- 
+enum EmployeeType {
+  remote
+  hybrid
+  physical
+}
+
+model Freelancer {
+  freelancerID     String                @id @default(uuid())
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+  name             String
+  userName         String
+  email            String
+  phoneNumber      Int
+  bio              String
+  basedIn          String
+  totalEarnings    Int                   @default(0)
+  avgRating        Float                 @default(0)
+  workPreferences  String
+  Ratings          Ratings[]
+  Applications     ProjectApplications[]
+  ProjectSelection ProjectSelections[]
+}
+
+model Client {
+  clientID    String    @id @default(uuid())
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  name        String
+  userName    String
+  email       String
+  phoneNumber Int
+  basedIn     String
+  companyName String?
+  noOfOrders  Int
+  Ratings     Ratings[]
+  Project     Project[]
+}
+
+// -- -- RESUME TO BE ADDED -- -- 
+model Portfolio {
+  portfolioID       String   @id @default(uuid())
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  usefulLinks       Skills[]
+  yearsOfExperience Int      @default(0)
+}
+
+model Ratings {
+  reviewID                String     @id @default(uuid())
+  createdAt               DateTime   @default(now())
+  updatedAt               DateTime   @updatedAt
+  client                  Client     @relation(fields: [clientClientID], references: [clientID], onDelete: Cascade)
+  clientClientID          String
+  freelancer              Freelancer @relation(fields: [freelancerFreelancerID], references: [freelancerID], onDelete: Cascade)
+  freelancerFreelancerID  String
+  Rating                  Int
+  feedBack                String
+  likes                   Int        @default(0)
+  clientSatisfactionScore Int        @default(0)
+}
+
+model Project {
+  projectID          String                @id @default(uuid())
+  createdAt          DateTime              @default(now())
+  updatedAt          DateTime              @updatedAt
+  projectName        String
+  projectDescription String
+  client             Client                @relation(fields: [clientID], references: [clientID], onDelete: Cascade)
+  clientID           String
+  isHiring           Boolean               @default(true)
+  startDate          DateTime              @default(now())
+  endDate            DateTime
+  paymentStatus      Boolean               @default(false)
+  industry           Industry
+  // OPTIONAL PROJECT FILES CAN ALSO BE A VALUE
+  proposedPrice      Int
+  Applications       ProjectApplications[]
+  ProjectSelection   ProjectSelections[]
+}
+
+model ProjectApplications {
+  projectApplicationID String          @id @default(uuid())
+  submittedAt          DateTime        @default(now())
+  updatedAt            DateTime        @updatedAt
+  applicant            Freelancer      @relation(fields: [applicantID], references: [freelancerID], onDelete: Cascade)
+  applicantID          String
+  project              Project         @relation(fields: [projectProjectID], references: [projectID], onDelete: Cascade)
+  projectProjectID     String
+  proposedAmount       Int
+  addtionalNotes       String?
+  Status               ApplicantStatus @default(pending)
+}
+
+model ProjectSelections {
+  projectSelectionID   String       @id @default(uuid())
+  selecteAt            DateTime     @default(now())
+  updatedAt            DateTime     @updatedAt
+  selectedFreelancer   Freelancer   @relation(fields: [selectedFreelancerID], references: [freelancerID], onDelete: Cascade)
+  selectedFreelancerID String
+  wage                 Int
+  project              Project      @relation(fields: [projectProjectID], references: [projectID], onDelete: Cascade)
+  projectProjectID     String
+  OfferingDetails      String?
+  projectRole          Skills[]
+  endOfContract        DateTime
+  empType              EmployeeType @default(remote)
+}

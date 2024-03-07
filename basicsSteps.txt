@@ -1,0 +1,96 @@
+1 -- npm install prisma
+2 -- npm install @prisma/client
+3 -- npm dlx  prisma init --datasource-provider postgresql
+4 -- Change the connection in .env file and write your models in schema.prisma - postgresql://JohnDoe:password@localhost:5432/mydb?schema=public
+5 -- npx prisma migrate dev --name init // Migrates new columns in table to old tables
+// This creates a migrations folder where you actually converted queries are written
+6 -- npx install @prisma/client
+7 -- npx prisma generate
+8 -- Create your main scripts.ts file and put this basic template
+
+IN NEXTJS db.ts file
+// We do this because if we normally define prisma then due to nextjs hot reloading there will be a new prisma client generated everytime we save files
+
+import { PrismaClient } from "@prisma/client";
+declare global {
+  var prisma: PrismaClient | undefined;
+}
+
+export const db = globalThis.prisma || new PrismaClient();
+
+if (process.env.NODE_ENV !== "production") globalThis.prisma = db
+// Write all prisma client queries here
+async function main() {
+
+}
+
+main()
+  .catch(e => {
+    console.error(e);
+  })
+
+9 -- pnpm dlx prisma generate
+
+
+THEORY
+- In prisma we have a generator function that is prisma own thing, what it does is, it takes our code and converts in into 
+its respective queries
+- There are only two field type modifiers that is ? and [], ? indicates that the field may be empty and [] indicates that 
+the value may be present or absent
+- Some common attributes include 
+-- @relation: defines relation between two tables
+-- @unique: Tells prisma that the values are unique
+-- @updatedAt: Tells prisma when the last value was updated
+-- @default: Gives a deafult value to key, for eg: we can give now() to signify that the deafult starts from the current time
+- We can have block level attributes and we can also have value level attributes, the block level attributes apply to all the 
+values on the model and are represented by @@ followed by attribute name
+- We have something called enums that can be used to define a set number of values that the value can only choose from
+
+
+
+EXMAPLE SCHEMA
+model User {
+  id               String          @id @default(uuid())
+  age              Int
+  name             String
+  email            String
+  role             Role            @default(BASIC)
+  writtenPosts     Post[]          @relation("WrittenPosts")
+  favoritePosts    Post[]          @relation("FavoritePosts")
+  userPreference   UserPreference? @relation(fields: [userPreferenceId], references: [id])
+  userPreferenceId String?         @unique
+  school String?
+
+  @@unique([age, name])
+  @@index([email])
+}
+
+model UserPreference {
+  id           String  @id @default(uuid())
+  emailUpdates Boolean
+  user         User?
+}
+
+model Post {
+  id            String     @id @default(uuid())
+  title         String
+  averageRating Float
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  author        User       @relation("WrittenPosts", fields: [authorId], references: [id])
+  authorId      String
+  favoritedBy   User?      @relation("FavoritePosts", fields: [userId], references: [id])
+  userId        String?
+  categories    Category[]
+}
+
+model Category {
+  id    String @id @default(uuid())
+  posts Post[]
+}
+
+enum Role {
+  BASIC
+  ADMIN
+  USER
+}
