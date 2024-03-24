@@ -1,6 +1,6 @@
 1 -- npm install prisma
 2 -- npm install @prisma/client
-3 -- npm dlx  prisma init --datasource-provider postgresql
+3 -- npx prisma init --datasource-provider postgresql
 4 -- Change the connection in .env file and write your models in schema.prisma - postgresql://JohnDoe:password@localhost:5432/mydb?schema=public
 5 -- npx prisma migrate dev --name init // Migrates new columns in table to old tables
 // This creates a migrations folder where you actually converted queries are written
